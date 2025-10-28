@@ -3,7 +3,7 @@ from collections import Counter
 No_players=5
 Type_order = ["Townsfolk", "Outsider", "Minion", "Demon"]
 Type_no_list=[3,1,0,1]
-
+Total_nights=2
 if sum(Type_no_list) != No_players:
     raise ValueError(f"Error: sum of Type_no_list ({sum(Type_no_list)}) does not equal No_players ({No_players})")
 
@@ -11,15 +11,20 @@ Townsfolks_list=["Washerwoman","Libarian","Investigator","Chef","Empath","Fortun
 True_Townsfolks_list=["Washerwoman","Libarian","Investigator","Chef","Empath","Fortune_teller","Undertaker","Monk","Ravenkeeper","Virgin","Slayer","Soldier","Mayor"]
 Outsiders_list=["Butler","Drunk","Recluse","Saint","Spy"]
 True_Outsiders_list=["Butler","Drunk","Recluse","Saint"]
+Totally_Good_list=["Washerwoman","Libarian","Investigator","Chef","Empath","Fortune_teller","Undertaker","Monk","Ravenkeeper","Virgin","Slayer","Soldier","Mayor","Butler","Drunk","Saint"]
+
 Minions_list=["Poisoner","Spy","Scarlet_woman","Baron","Recluse"]
 True_Minion_list=["Poisoner","Spy","Scarlet_woman","Baron"]
 Demon_list=["Imp","Recluse"]
 True_Demon_list=["Imp"]
+Totatlly_Evil_list=["Poisoner","Scarlet_woman","Baron","Imp"]
 
 Good_list=list(set(Townsfolks_list + Outsiders_list))
 Evil_list=list(set(Minions_list + Demon_list))
 Might_register_list=["Recluse","Spy"]
 
+Night_Death=[] #num
+Execution_Death=[]
 
 class Role():
     def __init__(self, name, type, ability=None):
@@ -82,7 +87,7 @@ Virgin=Role("Virgin","Townsfolk")
 Virgin_activated=False
 Virgin_target=None
 @Virgin.set_ability
-def ability(activated=False,target=None):
+def ability(activated=False,night=None,target=None):
     global Virgin_activated, Virgin_target
     if activated==True:
         Virgin_activated = True
@@ -91,24 +96,65 @@ def ability(activated=False,target=None):
     else:
         return True
 
+Empath=Role("Empath",'Townsfolk')
+@Empath.set_ability
+def ability(current_pos,no_list=[],poisoner_exist=False):
+    if poisoner_exist==False:
+        empathy_logic_list=[]
+        for i in range(len(no_list)):
+            while True:
+                left=current_pos-1
+                if left==-1:
+                    left=No_players-1
+                if left not in Execution_Death[:i] and left not in Night_Death[:i]:
+                    break
+            while True:
+                right = current_pos + 1
+                if right == No_players:
+                    right = 0
+                if right not in Execution_Death[:i] and right not in Night_Death[:i]:
+                    break
+
+            if no_list[i]==0:
+                empathy_logic_list.append(Role_Info[left].name not in Totatlly_Evil_list and Role_Info[right].name not in Totatlly_Evil_list)
+            elif no_list[i]==1:
+                empathy_logic_list.append(
+                    (Role_Info[left].name not in Totally_Good_list  and Role_Info[right].name not in Totatlly_Evil_list) or (Role_Info[left].name not in Totatlly_Evil_list and Role_Info[right].name not in Totally_Good_list) )
+            else:
+                empathy_logic_list.append(
+                    Role_Info[left].name not in Totally_Good_list and Role_Info[right].name not in Totally_Good_list)
+    #         print(Role_Info[left].name,Role_Info[right].name,no_list[i])
+    # print(empathy_logic_list)
+    return all(empathy_logic_list)
+
+
+
+
+Mayor=Role("Mayor","Townsfolk",True)
+
+
 Recluse=Role("Recluse","Outsider",True)
+Butler=Role("Butler","Outsider",True)
+Drunk=Role("Drunk","Outsider",True)
+
 Imp=Role("Imp","Demon")
 
 
-Claimed_Role_Info=[Virgin,Recluse,Slayer,Washerwoman,Libarian]
+Claimed_Role_Info=[Empath,Recluse,Slayer,Washerwoman,Libarian]
 Status_type=["Alive","Executed","Night_Death"]
 Status=[]
 Role_Info=Claimed_Role_Info.copy()
 
 for i in range(No_players):
-    Ability_info = [Claimed_Role_Info[0].ability(True,4), True,
-                    Role_Info[3].type!="Demon",Claimed_Role_Info[3].ability(2,4,"Libarian"),
-                    Claimed_Role_Info[4].ability(False,1,2,"Recluse")]
+
     if Virgin_activated:
         if Role_Info[i].name=="Virgin" or i==Virgin_target:
             continue
     Role_Info[i]=Imp
     Info=True
+    Ability_info = [Claimed_Role_Info[0].ability(0, [1, 1, 0]), True,
+                    Role_Info[3].type != "Demon", Claimed_Role_Info[3].ability(2, 4, "Libarian"),
+                    Claimed_Role_Info[4].ability(False, 1, 2, "Recluse")]
 
 
     if len(Role_Info) != len(set(Role_Info)):
