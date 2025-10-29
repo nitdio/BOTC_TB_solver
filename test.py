@@ -25,6 +25,7 @@ Might_register_list=["Recluse","Spy"]
 
 Night_Death=[] #num
 Execution_Death=[]
+Poisned_list=[]
 
 class Role():
     def __init__(self, name, type, ability=None):
@@ -123,11 +124,26 @@ def ability(current_pos,no_list=[],poisoner_exist=False):
             else:
                 empathy_logic_list.append(
                     Role_Info[left].name not in Totally_Good_list and Role_Info[right].name not in Totally_Good_list)
-    #         print(Role_Info[left].name,Role_Info[right].name,no_list[i])
-    # print(empathy_logic_list)
-    return all(empathy_logic_list)
+        #         print(Role_Info[left].name,Role_Info[right].name,no_list[i])
+        # print(empathy_logic_list)
+        return all(empathy_logic_list)
 
+Soldier=Role("Soldier",'Townsfolk')
+@Soldier.set_ability
+def ability(poisoner_exist=False):
+    if poisoner_exist==False:
+        return "Soldier" not in Night_Death
+    else:
+        Poisned_list[Night_Death.index("Soldier")]
 
+Undertaker=Role("Undertaker",'Townsfolk')
+@Undertaker.set_ability
+def ability(name_list,poisoner_exist=False):
+    if poisoner_exist==False:
+        undertaker_logic_list=[]
+        for i, pos in enumerate(Execution_Death):
+            undertaker_logic_list.append(Role_Info[pos].name==name_list[i])
+        return all(undertaker_logic_list)
 
 
 Mayor=Role("Mayor","Townsfolk",True)
