@@ -1,8 +1,8 @@
 from collections import Counter
-
+days=2
 No_players=5
 Type_order = ["Townsfolk", "Outsider", "Minion", "Demon"]
-Type_no_list=[3,1,0,1]
+Type_no_list=[3,0,1,1]
 Total_nights=2
 if sum(Type_no_list) != No_players:
     raise ValueError(f"Error: sum of Type_no_list ({sum(Type_no_list)}) does not equal No_players ({No_players})")
@@ -24,7 +24,7 @@ Evil_list=list(set(Minions_list + Demon_list))
 Might_register_list=["Recluse","Spy"]
 
 Night_Death=[] #num
-Execution_Death=[]
+Execution_Death=[0]
 Poisned_list=[]
 
 class Role():
@@ -33,6 +33,7 @@ class Role():
         self.type = type
         self.alignment=self.sort_alignment()
         self.ability=ability
+        self.activated_day=None
 
 
     def sort_alignment(self):
@@ -44,7 +45,18 @@ class Role():
     def set_ability(self, func):
         self.ability = func
 
+    def set_activated_day(self, day):
+        self.activated_day=day
+
 Slayer=Role("Slayer","Townsfolk","")
+@Slayer.set_ability
+def ability(target, activated=False):
+    if activated:
+        return Role_Info[target].type == "Demon"
+    else:
+        return  Role_Info[target].type == "Demon"
+
+
 
 Libarian=(Role("Libarian", "Townsfolk"))
 @Libarian.set_ability
@@ -55,21 +67,21 @@ def ability(zero=True,target1=None,target2=None,role=None):
         return Type_no_list[1] == 0
     if target1 is None or target2 is None or role is None:
         raise ValueError("target1, target2, and role must not be None when zero is False")
-    return Role_Info[target1].name == role or Role_Info[target2].name==role
+    return (Role_Info[target1].name == role or "Spy") or (Role_Info[target2].name == role or "Spy")
 
 Washerwoman=Role("Washerwoman","Townsfolk")
 @Washerwoman.set_ability
 def ability(target1=None,target2=None,role=None):
     if target1 is None or target2 is None or role is None:
         raise ValueError("target1, target2, and role must not be None when zero is False")
-    return Role_Info[target1].name == role or Role_Info[target2].name==role
+    return (Role_Info[target1].name == role or "Spy") or (Role_Info[target2].name == role or "Spy")
 
 Investigator=Role("Investigator","Townsfolk")
 @Investigator.set_ability
 def ability(target1=None,target2=None,role=None):
     if target1 is None or target2 is None or role is None:
         raise ValueError("target1, target2, and role must not be None when zero is False")
-    return Role_Info[target1].name == role or Role_Info[target2].name==role
+    return (Role_Info[target1].name == role or "Recluse") or (Role_Info[target2].name == role or "Recluse")
 
 Chef=Role("Chef","Townsfolk")
 @Chef.set_ability
@@ -153,54 +165,73 @@ Recluse=Role("Recluse","Outsider",True)
 Butler=Role("Butler","Outsider",True)
 Drunk=Role("Drunk","Outsider",True)
 
+Spy=Role("Spy","Minion",True)
+Baron=Role("Baron","Minion",True)
+
 Imp=Role("Imp","Demon")
 
 
-Claimed_Role_Info=[Empath,Recluse,Slayer,Washerwoman,Libarian]
+Claimed_Role_Info=[Empath,Soldier,Slayer,Washerwoman,Libarian]
 Status_type=["Alive","Executed","Night_Death"]
 Status=[]
 Role_Info=Claimed_Role_Info.copy()
 
-for i in range(No_players):
+for a in range(No_players):
+    for b in range(No_players):
 
-    if Virgin_activated:
-        if Role_Info[i].name=="Virgin" or i==Virgin_target:
+        Current_imp = []
+
+
+        if Virgin_activated:
+            if Role_Info[b].name=="Virgin" :
+                continue
+        Role_Info[b] = Spy
+
+        if Virgin_activated:
+            if Role_Info[a].name=="Virgin" or (a==Virgin_target):
+                continue
+        Role_Info[a]=Imp
+
+        Current_imp.append("Imp")
+        if a in Execution_Death: #haven't add logic for scarlet woman yet
+            Role_Info = Claimed_Role_Info.copy()
             continue
-    Role_Info[i]=Imp
-    Info=True
-    Ability_info = [Claimed_Role_Info[0].ability(0, [1, 1, 0]), True,
-                    Role_Info[3].type != "Demon", Claimed_Role_Info[3].ability(2, 4, "Libarian"),
-                    Claimed_Role_Info[4].ability(False, 1, 2, "Recluse")]
+        Info=True
+        Ability_info = [Claimed_Role_Info[0].ability(0, [2, 2]), Claimed_Role_Info[1].ability(),
+                        Role_Info[3].type != "Demon", Claimed_Role_Info[3].ability(2, 4, "Slayer"),
+                        Claimed_Role_Info[4].ability(True)]
 
 
-    if len(Role_Info) != len(set(Role_Info)):
-        Role_Info = Claimed_Role_Info.copy()
-        continue
 
 
-    # Count types in current assignment
-    Type_counts = Counter(role.type for role in Role_Info)
+        if len(Role_Info) != len(set(Role_Info)):
+            Role_Info = Claimed_Role_Info.copy()
+            continue
 
-    valid = all(Type_counts.get(t, 0) == n for t, n in zip(Type_order, Type_no_list))
 
-    if not valid:
-        Role_Info = Claimed_Role_Info.copy()
-        continue
-    # print(Ability_info)
-    for j in range(No_players):
+        # Count types in current assignment
+        Type_counts = Counter(role.type for role in Role_Info)
+
+        valid = all(Type_counts.get(t, 0) == n for t, n in zip(Type_order, Type_no_list))
+
+        if not valid:
+            Role_Info = Claimed_Role_Info.copy()
+            continue
+        # print(Ability_info)
+        for j in range(No_players):
+            # print(Info)
+            # print(Role_Info[j].name, Role_Info[j].alignment, Ability_info[j])
+            if Role_Info[j].alignment=="Good":
+
+                if Ability_info[j]==False:
+                    Info=False
+                    break
         # print(Info)
-        # print(Role_Info[j].name, Role_Info[j].alignment, Ability_info[j])
-        if Role_Info[j].alignment=="Good":
+        if Info==True:
+            list=[x.name for x in Role_Info]
+            print(list),
 
-            if Ability_info[j]==False:
-                Info=False
-                break
-    # print(Info)
-    if Info==True:
-        list=[x.name for x in Role_Info]
-        print(list)
-
-    Role_Info = Claimed_Role_Info.copy()
+        Role_Info = Claimed_Role_Info.copy()
 
 
 
