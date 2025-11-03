@@ -287,13 +287,12 @@ Fortune_Teller=Role("Fortune_Teller","Townsfolk")
 @Fortune_Teller.set_ability
 def ability(target_list,red_herring,role_info=None):
     # validation:
-    # note will add len of list correspond to execution and night death soon
+    # note will add len of list corresponding to execution and night death soon
     if not isinstance(target_list, list):
         raise TypeError("FT error: target_list must be a list of lists")
     if not all(isinstance(sublist, list) and len(sublist) == 3 for sublist in target_list):
         raise ValueError("FT error: Each element in target_list must be a list of exactly 3 values: [int, int, bool]")
     for i, (t1, t2, flag) in enumerate(target_list):
-        # Check types
         if not isinstance(t1, int) or not isinstance(t2, int):
             raise TypeError(f"FT error: target_list[{i}]: first two elements must be integers")
         if not isinstance(flag, bool):
