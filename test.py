@@ -37,13 +37,13 @@ Baron_type_no_dict = {
 # if sum(Type_no_list) != No_players:
 #     raise ValueError(f"Error: sum of Type_no_list ({sum(Type_no_list)}) does not equal No_players ({No_players})")
 
-Townsfolks_list = ["Washerwoman", "Librarian", "Investigator", "Chef", "Empath", "Fortune_teller", "Undertaker", "Monk",
+Townsfolks_list = ["Washerwoman", "Librarian", "Investigator", "Chef", "Empath", "Fortune_Teller", "Undertaker", "Monk",
                    "Ravenkeeper", "Virgin", "Slayer", "Soldier", "Mayor", "Spy"]
-True_Townsfolks_list = ["Washerwoman", "Librarian", "Investigator", "Chef", "Empath", "Fortune_teller", "Undertaker",
+True_Townsfolks_list = ["Washerwoman", "Librarian", "Investigator", "Chef", "Empath", "Fortune_Teller", "Undertaker",
                         "Monk", "Ravenkeeper", "Virgin", "Slayer", "Soldier", "Mayor"]
 Outsiders_list = ["Butler", "Drunk", "Recluse", "Saint", "Spy"]
 True_Outsiders_list = ["Butler", "Drunk", "Recluse", "Saint"]
-Totally_Good_list = ["Washerwoman", "Librarian", "Investigator", "Chef", "Empath", "Fortune_teller", "Undertaker",
+Totally_Good_list = ["Washerwoman", "Librarian", "Investigator", "Chef", "Empath", "Fortune_Teller", "Undertaker",
                      "Monk", "Ravenkeeper", "Virgin", "Slayer", "Soldier", "Mayor", "Butler", "Drunk", "Saint"]
 
 Minions_list = ["Poisoner", "Spy", "Scarlet_woman", "Baron", "Recluse"]
@@ -89,7 +89,7 @@ Slayer = Role("Slayer", "Townsfolk")
 @Slayer.set_ability
 def ability(target, activated=False, role_info=None):
     if activated:
-        return role_info[target].type == "Demon"
+        return (role_info[target].type == "Demon" or role_info[target].type == "Recluse")
     else:
         return role_info[target].type != "Demon"
 
@@ -201,6 +201,18 @@ def ability(current_pos, no_list=[], role_info=None):
                 role_info[left].name not in Totally_Good_list and role_info[right].name not in Totally_Good_list)
     return empathy_logic_list
 
+Fortune_Teller=Role("Fortune_Teller","Townsfolk")
+@Fortune_Teller.set_ability
+def ability(target_list,red_herring,role_info=None):
+    FT_logic_list=[]
+    for target_list_i in target_list:
+        if target_list_i[2]==True:
+            FT_logic_list.append(( role_info[target_list_i[0]].name in Demon_list) or (role_info[target_list_i[1]].name in Demon_list)or(target_list_i[0] ==red_herring or target_list_i[1] ==red_herring ))
+        else:
+            FT_logic_list.append((role_info[target_list_i[0]].name not in True_Demon_list) and (
+                        role_info[target_list_i[1]].name not in True_Demon_list) and (
+                                             target_list_i[0] != red_herring and target_list_i[1] != red_herring))
+    return FT_logic_list
 
 Soldier = Role("Soldier", 'Townsfolk')
 
@@ -215,7 +227,7 @@ def ability(current_pos):
 Monk = Role("Monk", 'Townsfolk')
 @Monk.set_ability
 def ability(target_list):
-    monk_logic_list=[]
+    monk_logic_list=[True]
     for i in range(len(target_list)):
         monk_logic_list.append(target_list[i]!=Night_Death[i])
     return monk_logic_list
@@ -314,6 +326,22 @@ Virgin_activated = False
 #             Empath_num_list.append(int(input(f"What number do you get on night {night+1}?")))
 #         Claimed_Role_Info.append(Empath)
 #         Info_Provided.append(Empath_num_list)
+#      elif Claimed_Role == "Fortune_Teller":
+#             FT_target_list=[]
+#             for night in range(days):
+#                 if night!=0:
+#                     if position == Execution_Death[night-1] or position == Night_Death[night-1] :
+#                         break
+#                 target1,target2= map(int, input("Who are the targets? ").split())
+#                 FT_Bool= input("Do you get yes? T/F")
+#                 if FT_Bool=="T":
+#                     FT_target_list.append([target1, target2,True])
+#                 elif FT_Bool == "T":
+#                     FT_target_list.append([target1, target2, False])
+#             Claimed_Role_Info.append(Fortune_Teller)
+#             Info_Provided.append(FT_target_list)
+
+
 #     elif Claimed_Role=="Undertaker":
 #         Undertaker_role_list = []
 #         if days==1:
@@ -383,32 +411,31 @@ Virgin_activated = False
 #     elif Claimed_Role=="Recluse":
 #         Claimed_Role_Info.append(Recluse)
 #         Info_Provided.append(None)
-No_players = 9
-days = 4
+No_players = 8
+days = 3
 Type_no_list =  Type_no_dict[No_players]
 Baron_type_no_list = Baron_type_no_dict[No_players]
-Execution_Death = [0, 6, 7]
-Night_Death = [8, 5, 1]
+Execution_Death = [0,7]
+Night_Death = [3, 5]
 Info_Provided = []
-Claimed_Role_Info = [Recluse, Investigator, Undertaker, Saint, Saint,
- Butler, Washerwoman, Chef, Ravenkeeper]
+Claimed_Role_Info = [Empath, Saint, Slayer, Ravenkeeper, Investigator,
+ Fortune_Teller, Recluse, Slayer]
 Info_Provided = [
+    [1],
     True,
-    [3, 7, "Baron"],
-    ["Recluse","Washerwoman","Drunk"],
+    [4,False,2],
+    [True,2,"Scarlet_woman",1],
+    [1,3,"Spy"],
+    [[3,7,False],[2,7,False]],
     True,
-    True,
-    True,
-    [3,7,"Chef"],
-    0,
-    [True,1,"Investigator",1]
+    [1,False,1]
 
 ]
-
+Correct_info=["Empath","Saint","Slayer","Ravenkeeper","Investigator","Fortune_Teller","Imp","Poisoner"]
 Virgin_activated = True
 Virgin_target = 3
 
-testing_minions = [ Baron]
+testing_minions = [ Poisoner]
 num_minions = 1
 solution=0
 for imp_pos in range(No_players):
@@ -437,8 +464,10 @@ for imp_pos in range(No_players):
                     if Claimed_Role_Info[minion_pos].name == "Virgin" or (
                             minion_pos == Virgin_target and Claimed_Role_Info[minion_pos].name != "Spy"):
                         break
-
+            if len(temp_Role_Info2) != len(set(temp_Role_Info2)):
+                continue
             remaining_players = [i for i in range(No_players) if (temp_Role_Info2[i].name not in True_Evil_list and temp_Role_Info2[i].name not in True_Outsiders_list)] + ["No_Drunk"]
+            potential_red_herring = [i for i in range(No_players) if (temp_Role_Info2[i].name not in True_Evil_list and temp_Role_Info2[i].name not in True_Outsiders_list)]
 
             for drunk_pos in remaining_players:
                 Role_Info=copy.deepcopy(temp_Role_Info2)
@@ -459,8 +488,7 @@ for imp_pos in range(No_players):
 
 
 
-                # start_list = [x.name for x in Role_Info]
-                # print(list)
+                start_list = [x.name for x in Role_Info]
 
 
 
@@ -472,182 +500,205 @@ for imp_pos in range(No_players):
 
 
 
+
                 Type_counts = Counter(role.type for role in Role_Info)
 
                 list = [x.name for x in Role_Info]
 
                 # print(list)
                 if "Baron" in list:
-
                     valid = all(Type_counts.get(t, 0) == n for t, n in zip(Type_order, Baron_type_no_list))
                 else:
+
+
                     valid = all(Type_counts.get(t, 0) == n for t, n in zip(Type_order, Type_no_list))
 
                 if not valid:
                     continue
+
                 # list = [x.name for x in Role_Info]
                 # print(list)
+                if "Fortune_Teller" in list:
+                    FT_loop=potential_red_herring
+                else:
+                    FT_loop=range(1)
+
+                for red_herring in FT_loop:
+
+
+                    Ability_info = []
+
+
+                    for player_index in range(No_players):
+
+                        if Claimed_Role_Info[player_index] == Washerwoman or Claimed_Role_Info[player_index] == Investigator:
+                            Ability_info.append([Claimed_Role_Info[player_index].ability(Info_Provided[player_index][0],
+                                                                                         Info_Provided[player_index][1],
+                                                                                         Info_Provided[player_index][2],
+                                                                                         Role_Info), 0])
+                        elif Claimed_Role_Info[player_index] == Librarian :
+                            Ability_info.append([Claimed_Role_Info[player_index].ability(Info_Provided[player_index][0],
+                                                                                         Info_Provided[player_index][1],
+                                                                                         Info_Provided[player_index][2],
+                                                                                         Info_Provided[player_index][3],
+                                                                                         Role_Info), 0])
+                        elif Claimed_Role_Info[player_index] == Chef:
+                            Ability_info.append(
+                                [Claimed_Role_Info[player_index].ability(Info_Provided[player_index], Role_Info), 0])
+                        elif Claimed_Role_Info[player_index] == Empath:
+                            Ability_info.append(
+                                [Claimed_Role_Info[player_index].ability(player_index, Info_Provided[player_index], Role_Info),
+                                 "Full"])
+                        elif Claimed_Role_Info[player_index] == Fortune_Teller:
+                            Ability_info.append(
+                                [Claimed_Role_Info[player_index].ability(Info_Provided[player_index],red_herring,
+                                                                         Role_Info),
+                                 "Full"])
+
+                        elif Claimed_Role_Info[player_index]== Undertaker:
+                            Ability_info.append(
+                                [Claimed_Role_Info[player_index].ability(Info_Provided[player_index], Role_Info),
+                                 "Full"])
+                        elif Claimed_Role_Info[player_index]== Monk:
+                            Ability_info.append(
+                                [Claimed_Role_Info[player_index].ability(Info_Provided[player_index]),
+                                 "Full"])
+                        elif Claimed_Role_Info[player_index] == Ravenkeeper:
+                            Ability_info.append([Claimed_Role_Info[player_index].ability(Info_Provided[player_index][0],
+                                                                                        Info_Provided[player_index][1],
+                                                                                        Info_Provided[player_index][2],
+                                                                                        Role_Info), Info_Provided[player_index][3]])
+                        elif Claimed_Role_Info[player_index] == Virgin or Claimed_Role_Info[player_index] == Slayer :
+                            Ability_info.append([Claimed_Role_Info[player_index].ability(Info_Provided[player_index][0],
+                                                                                         Info_Provided[player_index][1],Role_Info),Info_Provided[player_index][2]])
+                        elif Claimed_Role_Info[player_index] == Soldier:
+                            Ability_info.append([Claimed_Role_Info[player_index].ability(player_index),"Full"])
+
+
+                        elif Claimed_Role_Info[player_index].name in No_Info_list:
+                            Ability_info.append([True, "None"])
+
+                    list = [x.name for x in Role_Info]
 
 
 
-                Ability_info = []
-
-                for player_index in range(No_players):
-
-                    if Claimed_Role_Info[player_index] == Washerwoman or Claimed_Role_Info[player_index] == Investigator:
-                        Ability_info.append([Claimed_Role_Info[player_index].ability(Info_Provided[player_index][0],
-                                                                                     Info_Provided[player_index][1],
-                                                                                     Info_Provided[player_index][2],
-                                                                                     Role_Info), 0])
-                    elif Claimed_Role_Info[player_index] == Librarian :
-                        Ability_info.append([Claimed_Role_Info[player_index].ability(Info_Provided[player_index][0],
-                                                                                     Info_Provided[player_index][1],
-                                                                                     Info_Provided[player_index][2],
-                                                                                     Info_Provided[player_index][3],
-                                                                                     Role_Info), 0])
-                    elif Claimed_Role_Info[player_index] == Chef:
-                        Ability_info.append(
-                            [Claimed_Role_Info[player_index].ability(Info_Provided[player_index], Role_Info), 0])
-                    elif Claimed_Role_Info[player_index] == Empath:
-                        Ability_info.append(
-                            [Claimed_Role_Info[player_index].ability(player_index, Info_Provided[player_index], Role_Info),
-                             "Full"])
-                    elif Claimed_Role_Info[player_index]== Undertaker:
-                        Ability_info.append(
-                            [Claimed_Role_Info[player_index].ability(Info_Provided[player_index], Role_Info),
-                             "Full"])
-                    elif Claimed_Role_Info[player_index]== Monk:
-                        Ability_info.append(
-                            [Claimed_Role_Info[player_index].ability(Info_Provided[player_index]),
-                             "Full"])
-                    elif Claimed_Role_Info[player_index] == Ravenkeeper:
-                        Ability_info.append([Claimed_Role_Info[player_index].ability(Info_Provided[player_index][0],
-                                                                                    Info_Provided[player_index][1],
-                                                                                    Info_Provided[player_index][2],
-                                                                                    Role_Info), Info_Provided[player_index][3]])
-                    elif Claimed_Role_Info[player_index] == Virgin or Claimed_Role_Info[player_index] == Slayer :
-                        Ability_info.append([Claimed_Role_Info[player_index].ability(Info_Provided[player_index][0],
-                                                                                     Info_Provided[player_index][1],Role_Info),Info_Provided[player_index][2]])
-                    elif Claimed_Role_Info[player_index] == Soldier:
-                        Ability_info.append([Claimed_Role_Info[player_index].ability(player_index),"Full"])
-
-
-                    elif Claimed_Role_Info[player_index].name in No_Info_list:
-                        Ability_info.append([True, "None"])
-                list = [x.name for x in Role_Info]
-                # print(list)
-                # print(Ability_info)
-                existing_minion_positions = [
-                    i for i, role in enumerate(Role_Info)
-                    if role.name in True_Minion_list and role.name != "Scarlet_woman"
-                ]
-                starting_list = [x.name for x in Role_Info]
-                temp_Role_Info3=copy.deepcopy(Role_Info)
-                for perm in itertools.permutations(existing_minion_positions):
-                    Role_Info=copy.deepcopy(temp_Role_Info3)
-                    day = 0
-                    star_pass_no=0
-                    Info = True
-                    if Scarlet_woman in Role_Info:
-                        sw_pos = Role_Info.index(Scarlet_woman)
-                    while day != days:
-
+                    existing_minion_positions = [
+                        i for i, role in enumerate(Role_Info)
+                        if role.name in True_Minion_list and role.name != "Scarlet_woman"
+                    ]
+                    starting_list = [x.name for x in Role_Info]
+                    temp_Role_Info3=copy.deepcopy(Role_Info)
+                    for perm in itertools.permutations(existing_minion_positions):
+                        Role_Info=copy.deepcopy(temp_Role_Info3)
+                        day = 0
+                        star_pass_no=0
+                        Info = True
                         if Scarlet_woman in Role_Info:
+                            sw_pos = Role_Info.index(Scarlet_woman)
+                        while day != days:
 
-                            if (
-                                    day != 0
-                                    and (
-                                    (Execution_Death[day - 1] is not None and Role_Info[
-                                        Execution_Death[day - 1]].name == "Imp")
-                                    or (Night_Death[day - 1] is not None and Role_Info[
-                                Night_Death[day - 1]].name == "Imp")
-                            )
-                            ):
-                                if sw_pos not in Execution_Death[:day] and sw_pos not in Night_Death[:day]:
-                                    Role_Info[sw_pos] = Imp
-                                elif (
-                                            day != 0
-                                            and Night_Death[day - 1] is not None
-                                            and Role_Info[Night_Death[day - 1]].name == "Imp"
-                                    ):
-                                    while True:
-                                        star_pass_no += 1
-                                        if star_pass_no == len(perm):
-                                            Info = False
-                                            break
-                                        if perm[star_pass_no] not in Execution_Death[
-                                                                     :day] and perm[star_pass_no] not in Night_Death[
-                                                                                                         :day]:
-                                            Role_Info[perm[star_pass_no]] = Imp
-                                            break
+                            if Scarlet_woman in Role_Info:
 
-
-
-                        elif (
-
-                                day != 0
-
-                                and Night_Death[day - 1] is not None
-
-                                and Role_Info[Night_Death[day - 1]].name == "Imp"
-
-                        ):
-                            while True:
-
-                                if star_pass_no == len(perm):
-                                    Info=False
-                                    break
-                                if perm[star_pass_no] not in Execution_Death[
-                                                                :day] and perm[star_pass_no] not in Night_Death[:day]:
-                                    Role_Info[perm[star_pass_no]] = Imp
-                                    star_pass_no += 1
-                                    break
-                                star_pass_no += 1
-                        elif (
+                                if (
                                         day != 0
-                                        and Execution_Death[day - 1] is not None
-                                        and Role_Info[Execution_Death[day - 1]].name == "Imp"
+                                        and (
+                                        (Execution_Death[day - 1] is not None and Role_Info[
+                                            Execution_Death[day - 1]].name == "Imp")
+                                        or (Night_Death[day - 1] is not None and Role_Info[
+                                    Night_Death[day - 1]].name == "Imp")
+                                )
                                 ):
-                            Info=False
-                            break
-
-
-
-
-
-                        if Poisoner in Role_Info and Poisoner not in Execution_Death[:day]  and Poisoner not in Night_Death[:day]:
-                            Max_False_Info = 1
-                        else:
-                            Max_False_Info = 0
-
-                        False_info = 0
-
-                        for j in range(No_players):
-
-                            if Role_Info[j].alignment == "Good" and Role_Info[j].name != "Drunk" and (
-                                    Ability_info[j][1] == day or Ability_info[j][1] == "Full"):
-                                if Ability_info[j][1] == "Full":
-                                    if day + 1 <= len(Ability_info[j][0]):
-                                        if Ability_info[j][0][day] == False:
-                                            False_info += 1
-                                            if False_info > Max_False_Info:
-
+                                    if sw_pos not in Execution_Death[:day] and sw_pos not in Night_Death[:day]:
+                                        Role_Info[sw_pos] = Imp
+                                    elif (
+                                                day != 0
+                                                and Night_Death[day - 1] is not None
+                                                and Role_Info[Night_Death[day - 1]].name == "Imp"
+                                        ):
+                                        while True:
+                                            star_pass_no += 1
+                                            if star_pass_no == len(perm):
                                                 Info = False
                                                 break
-                                else:
-                                    if Ability_info[j][0] == False:
-                                        False_info += 1
-                                        if False_info > Max_False_Info:
-                                            Info = False
-                                            break
-                        day += 1
-                        if Info == False:
-                            break
+                                            if perm[star_pass_no] not in Execution_Death[
+                                                                         :day] and perm[star_pass_no] not in Night_Death[
+                                                                                                             :day]:
+                                                Role_Info[perm[star_pass_no]] = Imp
+                                                break
 
-                    if Info == True:
-                        print(f"solution {solution}")
-                        solution+=1
-                        list = [x.name for x in Role_Info]
-                        print(starting_list)
-                        print(list)
-                        print("----")
+
+
+                            elif (
+
+                                    day != 0
+
+                                    and Night_Death[day - 1] is not None
+
+                                    and Role_Info[Night_Death[day - 1]].name == "Imp"
+
+                            ):
+                                while True:
+
+                                    if star_pass_no == len(perm):
+                                        Info=False
+                                        break
+                                    if perm[star_pass_no] not in Execution_Death[
+                                                                    :day] and perm[star_pass_no] not in Night_Death[:day]:
+                                        Role_Info[perm[star_pass_no]] = Imp
+                                        star_pass_no += 1
+                                        break
+                                    star_pass_no += 1
+                            elif (
+                                            day != 0
+                                            and Execution_Death[day - 1] is not None
+                                            and Role_Info[Execution_Death[day - 1]].name == "Imp"
+                                    ):
+                                Info=False
+                                break
+
+
+                            list = [x.name for x in Role_Info]
+
+
+                            if "Poisoner" in list and list.index("Poisoner") not in Execution_Death[:day]  and Poisoner not in Night_Death[:day]:
+
+                                Max_False_Info = 1
+
+                            else:
+
+                                Max_False_Info = 0
+
+                            False_info = 0
+
+                            for j in range(No_players):
+
+                                if Role_Info[j].alignment == "Good" and Role_Info[j].name != "Drunk" and (
+                                        Ability_info[j][1] == day or Ability_info[j][1] == "Full"):
+                                    if Ability_info[j][1] == "Full":
+                                        if day + 1 <= len(Ability_info[j][0]):
+                                            if Ability_info[j][0][day] == False:
+                                                False_info += 1
+                                                if False_info > Max_False_Info:
+
+                                                    Info = False
+                                                    break
+                                    else:
+                                        if Ability_info[j][0] == False:
+                                            False_info += 1
+                                            if False_info > Max_False_Info:
+                                                Info = False
+                                                break
+                            day += 1
+                            if Info == False:
+                                break
+
+                        if Info == True:
+                            print(f"solution {solution}")
+                            solution+=1
+                            list = [x.name for x in Role_Info]
+
+                            print(starting_list)
+                            print(list)
+                            if "Fortune_Teller" in starting_list:
+                                print(f"red_herring is {red_herring}")
+                            print("----")
