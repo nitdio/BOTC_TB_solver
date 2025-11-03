@@ -2,9 +2,14 @@ from collections import Counter
 import copy
 import itertools
 
+## Note: Day 0 in python means things that things happened in night 1 and day 1, But days would be equal to 1 if night 1 passed and it's day 1
+No_players = 8
 
-
+# === ROLE TYPE DISTRIBUTION TABLES ===
+# Each list represents how many of each type appear depending on player count:
 Type_order = ["Townsfolk", "Outsider", "Minion", "Demon"]
+
+# Default setup (no Baron)
 Type_no_dict = {
     5:  [3, 0, 1, 1],
     6:  [3, 1, 1, 1],
@@ -18,6 +23,13 @@ Type_no_dict = {
     14: [9, 1, 3, 1],
     15: [9, 2, 3, 1]
 }
+
+for key, values in Type_no_dict.items():
+        total = sum(values)
+        if total != key:
+            print(f"Error in Type_no_dict: key {key} ≠ sum({values}) = {total}")
+
+# Default setup (with Baron)
 Baron_type_no_dict = {
     5:  [1, 2, 1, 1],
     6:  [1, 3, 1, 1],
@@ -31,124 +43,313 @@ Baron_type_no_dict = {
     14: [7, 3, 3, 1],
     15: [7, 4, 3, 1]
 }
-# Type_no_list =  Type_no_dict[No_players]
-# Baron_type_no_list = Baron_type_no_dict[No_players]
-# Total_nights = 2
-# if sum(Type_no_list) != No_players:
-#     raise ValueError(f"Error: sum of Type_no_list ({sum(Type_no_list)}) does not equal No_players ({No_players})")
 
+for key, values in Baron_type_no_dict.items():
+        total = sum(values)
+        if total != key:
+            print(f"Error in Baron_type_no_dict: key {key} ≠ sum({values}) = {total}")
+
+
+# === ROLE LISTS ===
+# List of roles that can be registered as townsfolks
 Townsfolks_list = ["Washerwoman", "Librarian", "Investigator", "Chef", "Empath", "Fortune_Teller", "Undertaker", "Monk",
                    "Ravenkeeper", "Virgin", "Slayer", "Soldier", "Mayor", "Spy"]
+
+# List of townsfolks
 True_Townsfolks_list = ["Washerwoman", "Librarian", "Investigator", "Chef", "Empath", "Fortune_Teller", "Undertaker",
                         "Monk", "Ravenkeeper", "Virgin", "Slayer", "Soldier", "Mayor"]
+
+# List of roles that can be registered as outsiders
 Outsiders_list = ["Butler", "Drunk", "Recluse", "Saint", "Spy"]
+
+# List of outsiders
 True_Outsiders_list = ["Butler", "Drunk", "Recluse", "Saint"]
+
+# List of good roles that cannot be registered as evil
 Totally_Good_list = ["Washerwoman", "Librarian", "Investigator", "Chef", "Empath", "Fortune_Teller", "Undertaker",
                      "Monk", "Ravenkeeper", "Virgin", "Slayer", "Soldier", "Mayor", "Butler", "Drunk", "Saint"]
 
+# List of roles that can be registered as minions
 Minions_list = ["Poisoner", "Spy", "Scarlet_woman", "Baron", "Recluse"]
+
+# List of minions
 True_Minion_list = ["Poisoner", "Spy", "Scarlet_woman", "Baron"]
+
+#List of roles that can be registered as demons
 Demon_list = ["Imp", "Recluse"]
+
+#List of demons
 True_Demon_list = ["Imp"]
+
+# List of evil roles that cannot be registered as good
 Totatlly_Evil_list = ["Poisoner", "Scarlet_woman", "Baron", "Imp"]
 
+# List of roles that can be registered as good
 Good_list = list(set(Townsfolks_list + Outsiders_list))
+
+# List of roles that can be registered as evil
 Evil_list = list(set(Minions_list + Demon_list))
+
+# List of evil roles
 True_Evil_list=list(set(True_Minion_list + True_Demon_list))
+
+# List of roles that can be registered as good or evil
 Might_register_list = ["Recluse", "Spy"]
 
+# List of good roles that does not provide any info at allF
 No_Info_list = ["Mayor", "Butler", "Saint", "Recluse"]
 
 
 
-
+# === ROLE CLASS DEFINITION ===
 class Role():
+    """Represents a single role in the game, with its type, alignment, and ability."""
+
     def __init__(self, name, type, activated_day=None, ability=True):
-        self.name = name
-        self.type = type
-        self.alignment = self.sort_alignment()
-        self.ability = ability
-        self.activated_day = activated_day
+        self.name = name  #String name for easier logic
+        self.type = type #(Townsfolk, Minion, etc.)
+        self.alignment = self.sort_alignment() #Good or evil
+        self.ability = ability  # Will be replaced by a function later
+        self.activated_day = activated_day  # Tracks when ability activates, 0 as Day and night 1 etc
+        self.true_activated = None
 
     def sort_alignment(self):
+        """Determine alignment based on role type."""
         if self.type in ["Outsider", "Townsfolk"]:
             return "Good"
-        else:
+        elif self.type in ["Minion", "Demon"]:
             return "Evil"
 
     def set_ability(self, func):
         self.ability = func
 
-    def set_activated_day(self, day):
-        self.activated_day = day
+    def set_input_logic(self, func):
+        self.input_logic = func
 
-
-Slayer = Role("Slayer", "Townsfolk")
-
-
-@Slayer.set_ability
-def ability(target, activated=False, role_info=None):
-    if activated:
-        return (role_info[target].type == "Demon" or role_info[target].type == "Recluse")
-    else:
-        return role_info[target].type != "Demon"
-
-
-Librarian = Role("Librarian", "Townsfolk", 0)
-
-
-@Librarian.set_ability
-def ability(zero=True, target1=None, target2=None, role=None, role_info=None):
-    if not isinstance(zero, bool):
-        raise ValueError("zero has to be a Boolean")
-    if zero == True:
-        return Type_no_list[1] == 0
-    if target1 is None or target2 is None or role is None:
-        raise ValueError("target1, target2, and role must not be None when zero is False")
-    return (role_info[target1].name == role or role_info[target1].name == "Spy") or (
-            role_info[target2].name == role or role_info[target2].name == "Spy")
-
-
-Washerwoman = Role("Washerwoman", "Townsfolk", 1)
-
-
+# == TOWNSFOLK ROLE ==
+# --- Washerwoman ---
+# Learns that one of two players is a specific Townsfolk.
+Washerwoman = Role("Washerwoman", "Townsfolk", 0)
 @Washerwoman.set_ability
 def ability(target1=None, target2=None, role=None, role_info=None):
-    if target1 is None or target2 is None or role is None:
-        raise ValueError("target1, target2, and role must not be None when zero is False")
+    # validations:
+    if not all(isinstance(x, int) for x in [target1, target2]):
+        raise TypeError("Washerwoman error: target1 and target2 must be integers")
+    if target1 >= No_players or target2 >= No_players or target1 < 0 or target2 < 0:
+        raise ValueError("Washerwoman error: target1 and target2 must be valid player indices (0 to No_players - 1)")
+    if target1 == target2:
+        raise ValueError("Washerwoman error: target1 and target2 must not be the same player")
+    if not isinstance(role, str):
+        raise TypeError("Washerwoman error: role must be a string")
+    if role not in True_Townsfolks_list:
+        raise ValueError("Washerwoman error: role must be in True_Townsfolks_list")
+    if not isinstance(role_info, list) or not all(isinstance(r, Role) for r in role_info):
+        raise TypeError("Washerwoman error: role_info must be a list of Role instances")
+    # logic:
     return (role_info[target1].name == role or role_info[target1].name == "Spy") or (
             role_info[target2].name == role or role_info[target2].name == "Spy")
 
+# --- Librarian ---
+# Learns that one of two players is a specific Outsider.
+Librarian = Role("Librarian", "Townsfolk", 0)
+@Librarian.set_ability
+def ability(zero=True, target1=None, target2=None, role=None, role_info=None):
+    # validations no.1:
+    if not isinstance(zero, bool):
+        raise TypeError("Librarian error: Parameter 'zero' must be a boolean.")
+    if not isinstance(role_info, list) or not all(isinstance(r, Role) for r in role_info):
+        raise TypeError("Librarian error: role_info must be a list of Role instances")
 
-Investigator = Role("Investigator", "Townsfolk", 1)
+    # logic no.1: if Librarian got a 0
+    if zero:
+        return (Type_no_list[1] == 0 and all(r.name != "Baron" for r in role_info))
 
+    # validations no.2:
+    if target1 is None or target2 is None or role is None:
+        raise ValueError("Librarian error: target1, target2, and role must not be None when zero is False")
+    if target1 >= No_players or target2 >= No_players or target1 < 0 or target2 < 0:
+        raise ValueError("Librarian error: target1 and target2 must be valid player indices (0 to No_players - 1)")
+    if target1 == target2:
+        raise ValueError("Librarian error: target1 and target2 must not be the same player")
+    if role not in True_Outsiders_list:
+        raise ValueError("Librarian error: role must be in True_Outsiders_list")
 
+    #logic no.2: if Librarian got 2 targets and an outside role
+    return (role_info[target1].name == role or role_info[target1].name == "Spy") or (
+            role_info[target2].name == role or role_info[target2].name == "Spy")
+
+# --- Investigator ---
+# Learns that one of two players is a specific Minion.
+Investigator = Role("Investigator", "Townsfolk", 0)
 @Investigator.set_ability
 def ability(target1=None, target2=None, role=None, role_info=None):
-    if target1 is None or target2 is None or role is None:
-        raise ValueError("target1, target2, and role must not be None when zero is False")
+    # validations:
+    if not all(isinstance(x, int) for x in [target1, target2]):
+        raise TypeError("Investigator error: target1 and target2 must be integers")
+    if target1 >= No_players or target2 >= No_players or target1 < 0 or target2 < 0:
+        raise ValueError("Investigator error: target1 and target2 must be valid player indices (0 to No_players - 1)")
+    if target1 == target2:
+        raise ValueError("Investigator error: target1 and target2 must not be the same player")
+    if not isinstance(role, str):
+        raise TypeError("Investigator error: role must be a string")
+    if role not in True_Minion_list:
+        raise ValueError("Investigator error: role must be in True_Minion_list")
+    if not isinstance(role_info, list) or not all(isinstance(r, Role) for r in role_info):
+        raise TypeError("Investigator error: role_info must be a list of Role instances")
+
+    # logic:
     return (role_info[target1].name == role or role_info[target1].name == "Recluse") or (
             role_info[target2].name == role or role_info[target2].name == "Recluse")
 
 
-Chef = Role("Chef", "Townsfolk", 1)
-
-
+# --- Chef ---
+# Learns how many pairs of evil players are sitting next to each other.
+Chef = Role("Chef", "Townsfolk", 0)
 @Chef.set_ability
 def ability(No_pairs, role_info=None):
+    # validation:
+    if not isinstance(No_pairs, int) :
+        raise TypeError("Chef error: No_pairs must be an integer")
+    if No_pairs >= No_players or No_pairs < 0 :
+        raise ValueError("Chef error: No_pairs must be valid player indices (0 to No_players - 1)")
+    if not isinstance(role_info, list) or not all(isinstance(r, Role) for r in role_info):
+        raise TypeError("Chef error: role_info must be a list of Role instances")
+
+    #logic:
     min_pairs = 0
     max_pairs = 0
     for i in range(No_players - 1, -1, -1):
-
         if role_info[i].name in Evil_list and role_info[i - 1].name in Evil_list:
             max_pairs += 1
             if role_info[i].name not in Might_register_list and role_info[i - 1].name not in Might_register_list:
                 min_pairs += 1
+    return max_pairs >= No_pairs >= min_pairs
+
+# --- Empath ---
+# Each night, learns how many of their living neighbors are evil.
+Empath = Role("Empath", 'Townsfolk')
+@Empath.set_ability
+def ability(current_pos, no_list=[], role_info=None):
+    # validation:
+    # note will add len of list correspond to execution and night death soon
+    if not isinstance(current_pos, int) :
+        raise TypeError("Empath error: current_pos must be an integer")
+    if current_pos >= No_players or current_pos < 0 :
+        raise ValueError("Empath error: current_pos must be valid player indices (0 to No_players - 1)")
+    if not isinstance(no_list, list) or not all(isinstance(x, int) for x in no_list):
+        raise TypeError("Empath error: no_list must be a list of integers")
+    if len(no_list) == 0:
+        raise ValueError("Empath error: no_list cannot be empty")
+    if len(no_list) > days:
+        raise ValueError("Empath error: no_list length cannot be greater than days")
+    if not all(0 <= x <= 2 for x in no_list):
+        raise ValueError("all elements in no_list must be between 0 and 2")
+    if not isinstance(role_info, list) or not all(isinstance(r, Role) for r in role_info):
+        raise TypeError("Empath error: role_info must be a list of Role instances")
+
+    # logic
+    empathy_logic_list = []
+    #Each day
+    for i in range(len(no_list)):
+        #Check left alive player
+        left = current_pos - 1
+        if left == -1:
+            left = No_players - 1
+        while left in Execution_Death[:i] or left in Night_Death[:i]:
+            left -= 1
+            if left == -1:
+                left = No_players - 1
+
+        #Check right alive player
+        right = current_pos + 1
+        if right == No_players:
+            right = 0
+        while right in Execution_Death[:i] or right in Night_Death[:i]:
+            right += 1
+            if right == No_players:
+                right = 0
+        # return bool
+        if no_list[i] == 0:
+            empathy_logic_list.append(
+                role_info[left].name not in Totatlly_Evil_list and role_info[right].name not in Totatlly_Evil_list)
+        elif no_list[i] == 1:
+            empathy_logic_list.append(
+                (role_info[left].name not in Totally_Good_list and role_info[right].name not in Totatlly_Evil_list) or (
+                        role_info[left].name not in Totatlly_Evil_list and role_info[right].name not in Totally_Good_list))
+        else:
+            empathy_logic_list.append(
+                role_info[left].name not in Totally_Good_list and role_info[right].name not in Totally_Good_list)
+    return empathy_logic_list
+
+# --- Fortune Teller ---
+# Each night, chooses two players and learns if one is a Demon. One good player (red herring) will be registered as the Demon.
+Fortune_Teller=Role("Fortune_Teller","Townsfolk")
+@Fortune_Teller.set_ability
+def ability(target_list,red_herring,role_info=None):
+    # validation:
+    # note will add len of list correspond to execution and night death soon
+    if not isinstance(target_list, list):
+        raise TypeError("FT error: target_list must be a list of lists")
+    if not all(isinstance(sublist, list) and len(sublist) == 3 for sublist in target_list):
+        raise ValueError("FT error: Each element in target_list must be a list of exactly 3 values: [int, int, bool]")
+    for i, (t1, t2, flag) in enumerate(target_list):
+        # Check types
+        if not isinstance(t1, int) or not isinstance(t2, int):
+            raise TypeError(f"FT error: target_list[{i}]: first two elements must be integers")
+        if not isinstance(flag, bool):
+            raise TypeError(f"FT error: target_list[{i}]: third element must be a boolean")
+        if t1 < 0 or t1 >= No_players or t2 < 0 or t2 >= No_players:
+            raise ValueError(f"FT error: target_list[{i}]: target indices must be between 0 and No_players - 1")
+        if t1 == t2:
+            raise ValueError(f"FT error: target_list[{i}]: target1 and target2 must not be the same player")
+        if not isinstance(red_herring, int):
+            raise TypeError("FT error: red_herring must be an integer")
+        if red_herring < 0 or red_herring >= No_players:
+            raise ValueError("FT error: red_herring must be a valid player index (0 to No_players - 1)")
+        if not isinstance(role_info, list) or not all(isinstance(r, Role) for r in role_info):
+            raise TypeError("FT error: role_info must be a list of Role instances")
+
+    #logic
+    FT_logic_list=[]
+    for target_list_i in target_list:
+        if target_list_i[2]==True:
+            FT_logic_list.append(( role_info[target_list_i[0]].name in Demon_list) or (role_info[target_list_i[1]].name in Demon_list)or(target_list_i[0] ==red_herring or target_list_i[1] ==red_herring ))
+        else:
+            FT_logic_list.append((role_info[target_list_i[0]].name not in True_Demon_list) and (
+                        role_info[target_list_i[1]].name not in True_Demon_list) and (
+                                             target_list_i[0] != red_herring and target_list_i[1] != red_herring))
+    return FT_logic_list
+
+# --- Undertaker ---
+# Learns the role of the player executed the previous day.
+Undertaker = Role("Undertaker", 'Townsfolk')
+@Undertaker.set_ability
+def ability(name_list, role_info=None):
+    #validation:
+    if not isinstance(name_list, list) or not all(isinstance(n, str) for n in name_list):
+        raise TypeError("Undertaker error: name_list must be a list of strings")
+    if len(name_list) >= days:
+        raise ValueError("Undertaker error: len(name_list) must be less than days")
+    if not isinstance(role_info, list) or not all(isinstance(r, Role) for r in role_info):
+        raise TypeError("Undertaker error: role_info must be a list of Role instances")
+
+    #logic
+    undertaker_logic_list = [True]
+    for i, pos in enumerate(Execution_Death):
+        if pos!=None:
+            undertaker_logic_list.append(role_info[pos].name == name_list[i])
+        else:
+            undertaker_logic_list.append(True)
+    return undertaker_logic_list
 
 
-
-    return max_pairs >= No_pairs and No_pairs >= min_pairs
-
+Slayer = Role("Slayer", "Townsfolk")
+@Slayer.set_ability
+def ability(target, activated=False, role_info=None):
+    if activated:
+        return role_info[target].type == "Demon" or role_info[target].type == "Recluse"
+    else:
+        return role_info[target].type != "Demon"
 
 Virgin = Role("Virgin", "Townsfolk")
 Virgin_activated = False
@@ -166,53 +367,9 @@ def ability(activated=False, target=None, role_info=None):
         return role_info[target].type != "Townsfolk"
 
 
-Empath = Role("Empath", 'Townsfolk')
 
 
-@Empath.set_ability
-def ability(current_pos, no_list=[], role_info=None):
-    empathy_logic_list = []
-    for i in range(len(no_list)):
-        left = current_pos - 1
-        if left == -1:
-            left = No_players - 1
-        while left in Execution_Death[:i] or left in Night_Death[:i]:
-            left -= 1
-            if left == -1:
-                left = No_players - 1
 
-        right = current_pos + 1
-        if right == No_players:
-            right = 0
-        while right in Execution_Death[:i] or right in Night_Death[:i]:
-            right += 1
-            if right == No_players:
-                right = 0
-
-        if no_list[i] == 0:
-            empathy_logic_list.append(
-                role_info[left].name not in Totatlly_Evil_list and role_info[right].name not in Totatlly_Evil_list)
-        elif no_list[i] == 1:
-            empathy_logic_list.append(
-                (role_info[left].name not in Totally_Good_list and role_info[right].name not in Totatlly_Evil_list) or (
-                        role_info[left].name not in Totatlly_Evil_list and role_info[right].name not in Totally_Good_list))
-        else:
-            empathy_logic_list.append(
-                role_info[left].name not in Totally_Good_list and role_info[right].name not in Totally_Good_list)
-    return empathy_logic_list
-
-Fortune_Teller=Role("Fortune_Teller","Townsfolk")
-@Fortune_Teller.set_ability
-def ability(target_list,red_herring,role_info=None):
-    FT_logic_list=[]
-    for target_list_i in target_list:
-        if target_list_i[2]==True:
-            FT_logic_list.append(( role_info[target_list_i[0]].name in Demon_list) or (role_info[target_list_i[1]].name in Demon_list)or(target_list_i[0] ==red_herring or target_list_i[1] ==red_herring ))
-        else:
-            FT_logic_list.append((role_info[target_list_i[0]].name not in True_Demon_list) and (
-                        role_info[target_list_i[1]].name not in True_Demon_list) and (
-                                             target_list_i[0] != red_herring and target_list_i[1] != red_herring))
-    return FT_logic_list
 
 Soldier = Role("Soldier", 'Townsfolk')
 
@@ -242,19 +399,6 @@ def ability(activated,target, role, role_info=None):
         return role_info[target].name==role
 
 
-Undertaker = Role("Undertaker", 'Townsfolk')
-
-
-@Undertaker.set_ability
-def ability(name_list, role_info=None):
-
-    undertaker_logic_list = [True]
-    for i, pos in enumerate(Execution_Death):
-        if pos!=None:
-            undertaker_logic_list.append(role_info[pos].name == name_list[i])
-        else:
-            undertaker_logic_list.append(True)
-    return undertaker_logic_list
 
 
 Mayor = Role("Mayor", "Townsfolk")
@@ -411,7 +555,7 @@ Virgin_activated = False
 #     elif Claimed_Role=="Recluse":
 #         Claimed_Role_Info.append(Recluse)
 #         Info_Provided.append(None)
-No_players = 8
+
 days = 3
 Type_no_list =  Type_no_dict[No_players]
 Baron_type_no_list = Baron_type_no_dict[No_players]
@@ -503,10 +647,10 @@ for imp_pos in range(No_players):
 
                 Type_counts = Counter(role.type for role in Role_Info)
 
-                list = [x.name for x in Role_Info]
+                ending_list = [x.name for x in Role_Info]
 
-                # print(list)
-                if "Baron" in list:
+                # print(ending_list)
+                if "Baron" in ending_list:
                     valid = all(Type_counts.get(t, 0) == n for t, n in zip(Type_order, Baron_type_no_list))
                 else:
 
@@ -516,9 +660,9 @@ for imp_pos in range(No_players):
                 if not valid:
                     continue
 
-                # list = [x.name for x in Role_Info]
-                # print(list)
-                if "Fortune_Teller" in list:
+                # ending_list = [x.name for x in Role_Info]
+                # print(ending_list)
+                if "Fortune_Teller" in ending_list:
                     FT_loop=potential_red_herring
                 else:
                     FT_loop=range(1)
@@ -578,7 +722,7 @@ for imp_pos in range(No_players):
                         elif Claimed_Role_Info[player_index].name in No_Info_list:
                             Ability_info.append([True, "None"])
 
-                    list = [x.name for x in Role_Info]
+                    ending_list = [x.name for x in Role_Info]
 
 
 
@@ -657,10 +801,10 @@ for imp_pos in range(No_players):
                                 break
 
 
-                            list = [x.name for x in Role_Info]
+                            ending_list = [x.name for x in Role_Info]
 
 
-                            if "Poisoner" in list and list.index("Poisoner") not in Execution_Death[:day]  and Poisoner not in Night_Death[:day]:
+                            if "Poisoner" in ending_list and ending_list.index("Poisoner") not in Execution_Death[:day]  and ending_list.index("Poisoner") not in Night_Death[:day]:
 
                                 Max_False_Info = 1
 
@@ -695,10 +839,10 @@ for imp_pos in range(No_players):
                         if Info == True:
                             print(f"solution {solution}")
                             solution+=1
-                            list = [x.name for x in Role_Info]
+                            ending_list = [x.name for x in Role_Info]
 
                             print(starting_list)
-                            print(list)
+                            print(ending_list)
                             if "Fortune_Teller" in starting_list:
                                 print(f"red_herring is {red_herring}")
                             print("----")
