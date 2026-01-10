@@ -439,12 +439,6 @@ Mayor = Role("Mayor", "Townsfolk")
 # == OUTSIDERS ROLE ==
 
 
-
-
-
-
-
-
 # Recluse:
 # You might register as evil and as a Minion or Demon, even if dead.
 Recluse = Role("Recluse", "Outsider")
@@ -506,6 +500,7 @@ Status = []
 
 
 Virgin_activated = False
+Slayer_acticated = False
 # for position in range(No_players):
 #
 #     Claimed_Role=input(f"What is position {position+1}'s claimed role?")
@@ -627,6 +622,8 @@ Virgin_activated = False
 #         Claimed_Role_Info.append(Recluse)
 #         Info_Provided.append(None)
 
+
+# Test case
 days = 3
 Type_no_list =  Type_no_dict[No_players]
 Baron_type_no_list = Baron_type_no_dict[No_players]
@@ -663,6 +660,9 @@ for imp_pos in range(No_players):
 
         if Claimed_Role_Info[imp_pos].name == "Virgin" or (imp_pos == Virgin_target):
             continue
+    if Slayer_acticated:
+        if Claimed_Role_Info[imp_pos].name == "Slayer" :
+            continue
 
     remaining_players = [i for i in range(No_players) if i != imp_pos]
 
@@ -680,6 +680,9 @@ for imp_pos in range(No_players):
                     if Claimed_Role_Info[minion_pos].name == "Virgin" or (
                             minion_pos == Virgin_target and Claimed_Role_Info[minion_pos].name != "Spy"):
                         break
+                    if Slayer_acticated:
+                        if Claimed_Role_Info[imp_pos].name == "Slayer" or (imp_pos == Virgin_target):
+                            continue
             if len(temp_Role_Info2) != len(set(temp_Role_Info2)):
                 continue
 
