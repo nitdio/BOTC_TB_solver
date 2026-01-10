@@ -1,0 +1,39 @@
+This is a program that shows the possibilities of all the combinations in the game Blood of the Clocktower TB. 
+It tests all the combinations, and if the combination does not make sense, it will move on to the next combination and print the ones that does.
+
+This solver assumes all good players tell the truth and all evil players give arbitrary information.
+
+All roles logic (All ability will return True(if info make senses) or False(if info does not make sense)
+Washerwoman: 
+  Input:
+    target1(int): position of first player based on the info
+    target2(int): position of second player based on the info
+    role(str): role name got by the info
+    role_info(list): the combinations currently being tested
+  Logic:
+    Either player 1 is the given Townsfolk role or registers as good (Spy), or
+    player 2 is the given Townsfolk role or registers as good (Spy)
+
+Librarian:
+  Input:
+    zero (bool): whether the Librarian received a “0 Outsiders” result
+    target1 (int): position of the first player based on the info (only used if zero is False)
+    target2 (int): position of the second player based on the info (only used if zero is False)
+    role (str): Outsider role name received in the info (only used if zero is False)
+    role_info (list): the combinations currently being tested
+  Logic:
+    If zero is True:
+    There are exactly 0 Outsiders in play
+    If zero is False:
+    Either player 1 is the given Outsider role or registers as good (Spy), or
+    player 2 is the given Outsider role or registers as good (Spy)
+
+Investigator:
+  Input:
+    target1 (int): position of the first player based on the info
+    target2 (int): position of the second player based on the info
+    role (str): Minion role name got by the info
+    role_info (list): the combinations currently being tested
+  Logic:
+    Either player 1 is the given Minion role or registers as that Minion (Spy), or
+    player 2 is the given Minion role or registers as that Minion (Spy)
