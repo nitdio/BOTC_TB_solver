@@ -37,3 +37,7 @@ Investigator:
   Logic:
     Either player 1 is the given Minion role or registers as that Minion (Spy), or
     player 2 is the given Minion role or registers as that Minion (Spy)
+
+Chef:
+  Input:
+    
