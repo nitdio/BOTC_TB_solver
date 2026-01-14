@@ -499,8 +499,7 @@ Status = []
 #          Night_Death.append(None)
 
 
-Virgin_activated = False
-Slayer_acticated = False
+
 # for position in range(No_players):
 #
 #     Claimed_Role=input(f"What is position {position+1}'s claimed role?")
@@ -646,6 +645,8 @@ Info_Provided = [
 Correct_info=["Empath","Saint","Slayer","Ravenkeeper","Investigator","Fortune_Teller","Imp","Poisoner"]
 Virgin_activated = True
 Virgin_target = 3
+
+Slayer_acticated = False
 
 minions_class_list = [ Baron,  Spy,Poisoner , Scarlet_woman]
 num_minions = 1
