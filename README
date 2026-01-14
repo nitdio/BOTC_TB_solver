@@ -40,4 +40,30 @@ Investigator:
 
 Chef:
   Input:
-    
+    No_pairs: The number of pairs of supposedly evil players
+    role_info (list): the combinations currently being tested
+  Logic:
+    Start min_pairs and max_pairs at 0
+    Go through each adjacent pair of players.
+    If both players in the pair are evil:
+    Always increase max_pairs (the pair could count).
+    Increase min_pairs only if neither role can register as good (the pair must count).
+    After checking all pairs, min_pairs is the guaranteed minimum and max_pairs is the possible maximum.
+    Check if No_pairs is between the 2 numbers
+
+Empath:
+  Input:
+    current_pos (int): position of the Empath
+    no_list (list): the Empath numbers received each day (0, 1, or 2)
+    role_info (list): the role combinations currently being tested
+  Logic:
+    For each day:
+      Find the nearest alive player to the left of the Empath.
+      Find the nearest alive player to the right of the Empath.
+      Ignore players who died by execution or at night before that day.
+      Based on the Empath number for that day:
+      0: both neighbours must not be totally evil.
+      1: Exactly one neighbour is evil (one not totally good, the other not totally evil).
+      2: Both neighbours must not be totally good.
+      Record whether the role combination satisfies that day’s Empath reading.
+      Return a list of booleans indicating whether the role combination is valid for each day.
